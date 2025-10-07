@@ -1,7 +1,3 @@
-"""
-Utility for OpenAI chat completions requests.
-"""
-
 from typing import Any
 
 
@@ -15,7 +11,17 @@ def get_openai_completion(
 ) -> dict:
     """
     Wrapper for OpenAI chat.completions.create.
-    Returns the completion object.
+
+    Args:
+            openai_client: The OpenAI client instance.
+            model: The model name to use.
+            messages: The list of messages for the chat completion.
+            tools: Optional list of tools for tool-using models.
+            tool_choice: Tool choice strategy, default is "auto".
+            temperature: Sampling temperature, default is 0.2.
+
+    Returns:
+            The OpenAI API response as a dictionary.
     """
     kwargs = {
         "model": model,

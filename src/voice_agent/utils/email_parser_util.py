@@ -13,7 +13,15 @@ logger = get_logger(name="GmailUtils")
 
 
 def parse_email_from_raw(raw_email_bytes: bytes) -> dict:
-    """Parse raw RFC 2822 email and extract headers + body using Python's email library."""
+    """
+    Parse raw RFC 2822 email and extract headers + body using Python's email library.
+
+    Args:
+            raw_email_bytes: The raw email content as bytes.
+
+    Returns:
+            A dictionary containing the parsed email components.
+    """
     try:
         # Parse email using modern policy (handles Unicode properly)
         msg = BytesParser(policy=policy.default).parsebytes(raw_email_bytes)
@@ -38,22 +46,58 @@ def parse_email_from_raw(raw_email_bytes: bytes) -> dict:
             for part in msg.walk():
                 content_type = part.get_content_type()
                 if content_type == "text/plain" and text_body is None:
-                    text_body = part.get_content()
+                    payload = part.get_payload(decode=True)
+                    if payload is not None:
+                        charset = part.get_content_charset() or "utf-8"
+                        try:
+                            if isinstance(payload, bytes):
+                                text_body = payload.decode(charset, errors="replace")
+                            else:
+                                text_body = str(payload)
+                        except Exception:
+                            if isinstance(payload, bytes):
+                                text_body = payload.decode("utf-8", errors="replace")
+                            else:
+                                text_body = str(payload)
                     break
         else:
             if msg.get_content_type() == "text/plain":
-                text_body = msg.get_content()
+                payload = msg.get_payload(decode=True)
+                if payload is not None:
+                    charset = msg.get_content_charset() or "utf-8"
+                    try:
+                        if isinstance(payload, bytes):
+                            text_body = payload.decode(charset, errors="replace")
+                    except Exception:
+                        if isinstance(payload, bytes):
+                            text_body = payload.decode("utf-8", errors="replace")
 
         # If no plain text found, try HTML
         if not text_body and msg.is_multipart():
             for part in msg.walk():
                 if part.get_content_type() == "text/html":
-                    html_body = part.get_content()
-                    text_body = _html_to_text(html_body)
+                    payload = part.get_payload(decode=True)
+                    if payload is not None:
+                        charset = part.get_content_charset() or "utf-8"
+                        try:
+                            if isinstance(payload, bytes):
+                                html_body = payload.decode(charset, errors="replace")
+                        except Exception:
+                            if isinstance(payload, bytes):
+                                html_body = payload.decode("utf-8", errors="replace")
+                        text_body = _html_to_text(html_body)
                     break
         elif not text_body and msg.get_content_type() == "text/html":
-            html_body = msg.get_content()
-            text_body = _html_to_text(html_body)
+            payload = msg.get_payload(decode=True)
+            if payload is not None:
+                charset = msg.get_content_charset() or "utf-8"
+                try:
+                    if isinstance(payload, bytes):
+                        html_body = payload.decode(charset, errors="replace")
+                except Exception:
+                    if isinstance(payload, bytes):
+                        html_body = payload.decode("utf-8", errors="replace")
+                text_body = _html_to_text(html_body)
 
         body = _clean_text(text_body) if text_body else ""
 

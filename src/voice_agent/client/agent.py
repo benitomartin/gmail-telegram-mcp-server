@@ -11,11 +11,14 @@ from voice_agent.server.prompts.email_prompts import (
     EMAIL_SUMMARY_AUDIO_PROMPT,
     EMAIL_SUMMARY_PROMPT,
 )
+from voice_agent.utils.logger_util import get_logger
 from voice_agent.utils.openai_utils import get_openai_completion
 
 
 class VoiceAgentClient:
     def __init__(self, openai_client: OpenAI | None = None, model: str | None = None):
+        self.logger = get_logger("VoiceAgentClient")
+
         self.openai_client = openai_client
         self.model = model
 
@@ -46,7 +49,7 @@ class VoiceAgentClient:
             await session.initialize()
             yield session
 
-    async def call_mcp_tool(self, tool_name: str, arguments: dict[str, Any]) -> str:
+    async def call_mcp_tool(self, tool_name: str, arguments: dict, session: Any = None) -> str:
         """
         Call a tool on the MCP server and return its text result.
 
@@ -57,12 +60,18 @@ class VoiceAgentClient:
         Returns:
                 The text result from the tool call.
         """
-        async with self.mcp_host_initialized_session() as session:
+        if session is None:
+            async with self.mcp_host_initialized_session() as session:
+                result = await session.call_tool(tool_name, arguments=arguments)
+                return result.content[0].text
+        else:
             result = await session.call_tool(tool_name, arguments=arguments)
             return result.content[0].text
 
-    async def get_summary_prompt(self, timespan: str = "today", for_audio: bool = False) -> str:
-        """F
+    async def get_summary_prompt(
+        self, timespan: str = "today", for_audio: bool = False, session: Any = None
+    ) -> str:
+        """
         Get the email summary prompt from the MCP server, or use a fallback if not available.
 
         Args:
@@ -72,7 +81,25 @@ class VoiceAgentClient:
         Returns:
                 The email summary prompt string.
         """
-        async with self.mcp_host_initialized_session() as session:
+        if session is None:
+            async with self.mcp_host_initialized_session() as session:
+                try:
+                    prompt_name = (
+                        "email_summary_audio_format_prompt"
+                        if for_audio
+                        else "email_summary_format_prompt"
+                    )
+                    prompt_result = await session.get_prompt(
+                        prompt_name, arguments={"timespan": timespan}
+                    )
+                    if prompt_result.messages:
+                        return prompt_result.messages[0].content.text
+                except Exception as e:
+                    self.logger.error(f"Error getting summary prompt: {e}")
+                # Fallback prompt
+                fallback = EMAIL_SUMMARY_AUDIO_PROMPT if for_audio else EMAIL_SUMMARY_PROMPT
+                return fallback.format(timespan=timespan)
+        else:
             try:
                 prompt_name = (
                     "email_summary_audio_format_prompt"
@@ -84,8 +111,8 @@ class VoiceAgentClient:
                 )
                 if prompt_result.messages:
                     return prompt_result.messages[0].content.text
-            except Exception:
-                pass
+            except Exception as e:
+                self.logger.error(f"Error getting summary prompt: {e}")
             # Fallback prompt
             fallback = EMAIL_SUMMARY_AUDIO_PROMPT if for_audio else EMAIL_SUMMARY_PROMPT
             return fallback.format(timespan=timespan)
@@ -153,12 +180,12 @@ class VoiceAgentClient:
                     tool_choice="auto",
                     temperature=0.2,
                 )
-                choice = completion.choices[0].message
-                if choice.tool_calls:
+                choice = completion.choices[0].message # type: ignore
+                if hasattr(choice, "tool_calls") and choice.tool_calls:
                     messages.append(
                         {
                             "role": "assistant",
-                            "content": choice.content or "",
+                            "content": getattr(choice, "content", "") or "",
                             "tool_calls": [
                                 {
                                     "id": tc.id,
@@ -199,5 +226,5 @@ class VoiceAgentClient:
                             }
                         )
                     continue
-                return (choice.content or "", audio_b64)
+                return (getattr(choice, "content", "") or "", audio_b64)
             return ("Sorry, I couldn't complete the request.", None)

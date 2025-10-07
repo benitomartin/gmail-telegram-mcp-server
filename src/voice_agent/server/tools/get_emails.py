@@ -4,16 +4,15 @@ from datetime import datetime
 
 from fastmcp import Context
 
-from voice_agent.server.gmail_mcp_instance import gmail_mcp
 from voice_agent.utils.email_parser_util import parse_email_from_raw
 from voice_agent.utils.gmail_auth_util import get_gmail_service
 
 
-@gmail_mcp.tool()
 async def get_emails(days: int = 1, max_results: int = 50, ctx: Context | None = None) -> str:
     """Fetch emails from the last N days with full body content.
 
-    This is the main tool for fetching emails. The LLM should decide how many days based on user request:
+    This is the main tool for fetching emails.
+    The LLM should decide how many days based on user request:
     - "today" → days=0 (or days=1)
     - "yesterday" → days=1
     - "last 2 days" → days=2
@@ -56,7 +55,7 @@ async def get_emails(days: int = 1, max_results: int = 50, ctx: Context | None =
     if ctx:
         await ctx.debug("Gmail list() returned messages", extra={"count": len(messages)})
 
-    emails = []
+    emails: list[dict] = []
     if not messages:
         if ctx:
             await ctx.info("No emails found for specified timeframe")

@@ -4,12 +4,12 @@ import os
 from fastmcp import Context
 from google.cloud import texttospeech as tts
 
-from voice_agent.server.gmail_mcp_instance import gmail_mcp
+from voice_agent.config import settings
 
 
 def _init_tts_client() -> tts.TextToSpeechClient:
     # GOOGLE_APPLICATION_CREDENTIALS must be set to a JSON key file path
-    creds_path = os.getenv("GOOGLE_APPLICATION_CREDENTIALS", "")
+    creds_path = settings.google.application_credentials
     if not creds_path or not os.path.exists(creds_path):
         raise ValueError(
             "GOOGLE_APPLICATION_CREDENTIALS env var must point to a valid service account JSON file"
@@ -41,7 +41,6 @@ def _synthesize_chunks(text_chunks: list[str], language_code: str, voice_name: s
     return response.audio_content
 
 
-@gmail_mcp.tool()
 async def tts_instagram_audio(
     text: str,
     language_code: str = "en-US",
