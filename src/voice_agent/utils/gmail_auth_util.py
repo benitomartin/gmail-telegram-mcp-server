@@ -28,9 +28,7 @@ def save_token_to_env(token_json: str) -> None:
     if os.path.exists(env_file):
         with open(env_file) as f:
             existing_lines = [
-                line
-                for line in f.readlines()
-                if not line.startswith("GOOGLE__GMAIL_TOKEN=")
+                line for line in f.readlines() if not line.startswith("GOOGLE__GMAIL_TOKEN=")
             ]
     with open(env_file, "w") as f:
         f.writelines(existing_lines)
@@ -55,8 +53,7 @@ def get_gmail_service() -> googleapiclient.discovery.Resource:
     if token_json:
         try:
             creds = Credentials.from_authorized_user_info(
-                json.loads(token_json),
-                settings.google.scopes
+                json.loads(token_json), settings.google.scopes
             )
         except Exception as e:
             logger.error(f"Error loading token: {e}")
@@ -82,10 +79,7 @@ def get_gmail_service() -> googleapiclient.discovery.Resource:
                 "token_uri": token_uri,
             }
         }
-        flow = InstalledAppFlow.from_client_config(
-            client_config,
-            scopes=settings.google.scopes
-        )
+        flow = InstalledAppFlow.from_client_config(client_config, scopes=settings.google.scopes)
         # Request offline access to get a refresh token
         creds = flow.run_local_server(port=0)
         # creds is guaranteed to be non-None after OAuth flow

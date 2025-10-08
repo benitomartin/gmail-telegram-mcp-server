@@ -6,6 +6,7 @@ from mcp import ClientSession, StdioServerParameters
 from mcp.client.stdio import stdio_client
 from openai import OpenAI
 
+from voice_agent.config import settings
 from voice_agent.server.prompts.email_prompts import (
     EMAIL_ASSISTANT_SYSTEM_PROMPT,
     EMAIL_SUMMARY_AUDIO_PROMPT,
@@ -49,25 +50,6 @@ class VoiceAgentClient:
             await session.initialize()
             yield session
 
-    async def call_mcp_tool(self, tool_name: str, arguments: dict, session: Any = None) -> str:
-        """
-        Call a tool on the MCP server and return its text result.
-
-        Args:
-                tool_name: The name of the tool to call.
-                arguments: A dictionary of arguments to pass to the tool.
-
-        Returns:
-                The text result from the tool call.
-        """
-        if session is None:
-            async with self.mcp_host_initialized_session() as session:
-                result = await session.call_tool(tool_name, arguments=arguments)
-                return result.content[0].text
-        else:
-            result = await session.call_tool(tool_name, arguments=arguments)
-            return result.content[0].text
-
     async def get_summary_prompt(
         self, timespan: str = "today", for_audio: bool = False, session: Any = None
     ) -> str:
@@ -85,9 +67,9 @@ class VoiceAgentClient:
             async with self.mcp_host_initialized_session() as session:
                 try:
                     prompt_name = (
-                        "email_summary_audio_format_prompt"
+                        settings.prompts.summary_audio_prompt
                         if for_audio
-                        else "email_summary_format_prompt"
+                        else settings.prompts.summary_prompt
                     )
                     prompt_result = await session.get_prompt(
                         prompt_name, arguments={"timespan": timespan}
@@ -102,9 +84,9 @@ class VoiceAgentClient:
         else:
             try:
                 prompt_name = (
-                    "email_summary_audio_format_prompt"
+                    settings.prompts.summary_audio_prompt
                     if for_audio
-                    else "email_summary_format_prompt"
+                    else settings.prompts.summary_prompt
                 )
                 prompt_result = await session.get_prompt(
                     prompt_name, arguments={"timespan": timespan}
@@ -154,7 +136,7 @@ class VoiceAgentClient:
                 mcp_prompts = await session.list_prompts()
                 system_prompt_obj = None
                 for prompt in mcp_prompts.prompts:
-                    if prompt.name == "email_assistant_system_prompt":
+                    if prompt.name == settings.prompts.assistant_prompt:
                         prompt_result = await session.get_prompt(prompt.name)
                         if prompt_result.messages:
                             system_prompt_obj = prompt_result.messages[0].content.text
@@ -180,7 +162,7 @@ class VoiceAgentClient:
                     tool_choice="auto",
                     temperature=0.2,
                 )
-                choice = completion.choices[0].message # type: ignore
+                choice = completion.choices[0].message  # type: ignore
                 if hasattr(choice, "tool_calls") and choice.tool_calls:
                     messages.append(
                         {

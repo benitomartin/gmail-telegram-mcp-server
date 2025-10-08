@@ -40,7 +40,6 @@ class EmailSummaryBot:
         """
         if update.message:
             await update.message.reply_text(
-
                 "👋 Hello! I'm your Email Summary Bot!\n"
                 "Commands:\n"
                 "- /start - Show this message\n"
@@ -156,15 +155,15 @@ class EmailSummaryBot:
 
     async def summary_today(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         """
-         Summarize today's emails in text format.
+        Summarize today's emails in text format.
 
-         Args:
-            update: Incoming update from Telegram.
-            context: Context for the command handler.
+        Args:
+           update: Incoming update from Telegram.
+           context: Context for the command handler.
 
-         Return:
-            None
-         """
+        Return:
+           None
+        """
 
         if update.message:
             await update.message.reply_text("📧 Summarizing today's emails... ⏳")
@@ -185,7 +184,7 @@ class EmailSummaryBot:
 
                 self.logger.info("Building summary prompt")
                 prompt_result = await session.get_prompt(
-                    "email_summary_format_prompt",
+                    settings.prompts.summary_prompt,
                     arguments={"timespan": "today"},
                 )
                 system_prompt = (
@@ -211,7 +210,7 @@ class EmailSummaryBot:
                     temperature=0.2,
                 )
 
-                summary = completion.choices[0].message.content # type: ignore
+                summary = completion.choices[0].message.content  # type: ignore
                 self.logger.info(f"Generated summary: {len(summary)} chars")
                 if update.message:
                     await update.message.reply_text(summary)
@@ -302,7 +301,7 @@ class EmailSummaryBot:
 
                 self.logger.info("Building AUDIO-FRIENDLY summary prompt")
                 prompt_result = await session.get_prompt(
-                    "email_summary_audio_format_prompt",
+                    settings.prompts.summary_audio_prompt,
                     arguments={"timespan": "today"},
                 )
                 system_prompt = (
@@ -328,7 +327,7 @@ class EmailSummaryBot:
                     temperature=0.2,
                 )
 
-                summary_text = completion.choices[0].message.content # type: ignore
+                summary_text = completion.choices[0].message.content  # type: ignore
                 self.logger.info(f"Generated conversational summary: {len(summary_text)} chars")
 
                 self.logger.info("Calling MCP tool: tts_instagram_audio")

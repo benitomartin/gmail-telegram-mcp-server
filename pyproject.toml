@@ -20,7 +20,18 @@ dependencies = [
     "google-cloud-texttospeech>=2.21.0",
     "beautifulsoup4>=4.14.2",
     "lxml>=6.0.2",
+    "pydantic>=2.11.10",
 ]
+
+[dependency-groups]
+lint = [
+    "mypy>=1.18.2",
+]
+test = [
+    "pytest>=8.4.2",
+    "pytest-asyncio>=1.2.0",
+]
+
 
 [build-system]
 requires = ["hatchling"]
@@ -123,6 +134,7 @@ max-complexity = 10   # Maximum McCabe complexity allowed per function
 [tool.mypy]
 files = ["src"]                  # Check all files in src/
 mypy_path = ["src"]              # Add src to Python path so imports work correctly
+# plugins = ['pydantic.mypy']
 
 ignore_missing_imports = true    # Ignore third-party imports without type hints
 disallow_untyped_defs = true     # Require type annotations for all function definitions
@@ -131,7 +143,6 @@ warn_redundant_casts = true      # Warn about redundant casts
 warn_unused_ignores = false      # Warn about unused # type: ignore comments
 warn_return_any = false          # Warn if a function returns Any type
 strict_optional = true           # Enable strict optional checking
-
 
 # # Use `packages` to specify the package root
 # packages = ["src"]

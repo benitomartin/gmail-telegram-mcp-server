@@ -4,6 +4,7 @@ from fastmcp import FastMCP
 from fastmcp.prompts import Prompt
 from fastmcp.tools import Tool
 
+from voice_agent.config import settings
 from voice_agent.server.prompts.prompt_calls import (
     email_assistant_system_prompt,
     email_summary_audio_format_prompt,
@@ -26,7 +27,7 @@ class GmailMcpServer:
     def _register_tools(self) -> None:
         self.mcp.add_tool(
             Tool.from_function(
-                name="get_emails",
+                name=settings.tools.get_emails_tool,
                 description=(
                     "Fetch emails from Gmail for a specified number of days. "
                     "Returns JSON array of emails with id, from, subject, date, and body fields."
@@ -36,7 +37,7 @@ class GmailMcpServer:
         )
         self.mcp.add_tool(
             Tool.from_function(
-                name="tts_instagram_audio",
+                name=settings.tools.tts_instagram_audio_tool,
                 description="Convert text to speech for Instagram audio messages.",
                 fn=tts_instagram_audio,
             )
@@ -45,7 +46,7 @@ class GmailMcpServer:
     def _register_prompts(self) -> None:
         self.mcp.add_prompt(
             Prompt.from_function(
-                name="email_assistant_system_prompt",
+                name=settings.prompts.assistant_prompt,
                 description=(
                     "System prompt for the email assistant agent with automatic tool selection."
                 ),
@@ -54,14 +55,14 @@ class GmailMcpServer:
         )
         self.mcp.add_prompt(
             Prompt.from_function(
-                name="email_summary_format_prompt",
+                name=settings.prompts.summary_prompt,
                 description="Prompt for formatting email summaries with a specific timespan.",
                 fn=email_summary_format_prompt,
             )
         )
         self.mcp.add_prompt(
             Prompt.from_function(
-                name="email_summary_audio_format_prompt",
+                name=settings.prompts.summary_audio_prompt,
                 description=(
                     "Prompt for formatting email summaries specifically for audio/speech output."
                 ),
