@@ -1,6 +1,6 @@
 # Gmail Telegram MCP Server
 
-![Gmail Telegram MCP Server](static/telegram_bot.png)
+![Gmail Telegram MCP Server](static/bot.png)
 
 <div align="center">
 
@@ -47,6 +47,10 @@ It allows to interact with Gmail emails via a Telegram bot. The following comman
 - /summary_today - Quick text summary of today's emails
 - /audio_today - Quick audio summary of today's emails
 - /summary - Smart agent; decides timeframe & format (text/audio/both)
+
+You can read the article about this project in my Substack Newsletter:
+
+- [Article](https://aiechoes.substack.com/p/talk-to-your-inbox-mcp-gmail-bot-819)
 
 ## Project Structure
 
