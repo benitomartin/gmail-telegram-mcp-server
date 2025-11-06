@@ -81,6 +81,7 @@ You can read the article about this project in my Substack Newsletter:
 │           ├── gmail_auth_util.py       # Gmail authentication utilities
 │           ├── logger_util.py           # Logging utilities
 │           └── openai_utils.py          # OpenAI API utilities
+├── test/                                # Unit/Integration tests
 ```
 
 ## Prerequisites
